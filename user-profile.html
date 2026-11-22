@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Profile</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="user-profile" id="userProfile">
+    <div class="up-banner" id="upBanner">
+      <button class="up-back" onclick="closeUserProfile()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <div class="up-banner-blur" aria-hidden="true"></div>
+      <div class="up-menu-wrap">
+        <button class="up-menu-btn" id="upMenuBtn" onclick="toggleProfileMenu(event)" aria-label="Profile options" aria-haspopup="true" aria-expanded="false"><i class="iconoir-menu"></i></button>
+        <div class="up-menu-dropdown" id="upMenuDropdown" role="menu">
+          <button class="up-menu-item" role="menuitem" onclick="profileMenuAction('about')"><i class="iconoir-user"></i>About this profile</button>
+          <button class="up-menu-item danger" role="menuitem" onclick="profileMenuAction('block')"><i class="iconoir-prohibition"></i>Block</button>
+          <button class="up-menu-item danger" role="menuitem" onclick="profileMenuAction('report')"><i class="iconoir-flag"></i>Report</button>
+        </div>
+      </div>
+    </div>
+    <div class="up-body">
+      <div class="up-avatar" id="upAvatar"></div>
+      <h2 class="up-name" id="upName"></h2>
+      <p class="up-bio" id="upBio"></p>
+      <div class="up-stats">
+        <div class="up-stat"><b id="upFollowers">0</b><span>Followers</span></div>
+        <span class="up-divider">|</span>
+        <div class="up-stat"><b id="upFollowing">0</b><span>Following</span></div>
+      </div>
+      <div class="up-actions">
+        <button class="up-follow" id="upFollowBtn" onclick="toggleProfileFollow()">Follow</button>
+        <button class="up-ghost" onclick="messageProfile()">Message</button>
+        <button class="up-share" onclick="shareProfile()" aria-label="Share profile"><i class="iconoir-share-android"></i></button>
+      </div>
+      <div class="up-tabs profile-tabs" role="tablist" aria-label="User content">
+        <button class="profile-tab active" data-ptab="posts" role="tab" aria-selected="true" onclick="setUpTab('posts')" aria-label="Posts"><i class="iconoir-view-grid"></i></button>
+        <button class="profile-tab" data-ptab="videos" role="tab" aria-selected="false" onclick="setUpTab('videos')" aria-label="Videos"><i class="iconoir-media-video"></i></button>
+        <button class="profile-tab" data-ptab="liked" role="tab" aria-selected="false" onclick="setUpTab('liked')" aria-label="Liked posts"><i class="iconoir-heart"></i></button>
+        <button class="profile-tab" data-ptab="saved" role="tab" aria-selected="false" onclick="setUpTab('saved')" aria-label="Saved posts"><i class="iconoir-bookmark"></i></button>
+      </div>
+      <div class="profile-grid" id="upGrid"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="aboutProfileOverlay">
+    <div class="sheet">
+      <div class="about-profile-head">
+        <span class="about-profile-avatar" id="aboutAvatar"></span>
+        <div class="about-profile-id">
+          <h3 id="aboutName"></h3>
+          <p id="aboutRole"></p>
+        </div>
+        <button class="insight-close" onclick="closeAboutProfile()" aria-label="Close"><i class="iconoir-xmark"></i></button>
+      </div>
+      <div class="about-profile-rows">
+        <div class="about-row"><span>Full name</span><b id="aboutFullName"></b></div>
+        <div class="about-row"><span>Age</span><b id="aboutAge"></b></div>
+        <div class="about-row"><span>Gender</span><b id="aboutGender"></b></div>
+        <div class="about-row"><span>Temple</span><b id="aboutTemple"></b></div>
+        <div class="about-row"><span>Joined</span><b id="aboutJoined"></b></div>
+        <div class="about-row"><span>Lives in</span><b id="aboutLocation"></b></div>
+      </div>
+      <div class="about-profile-bio">
+        <h4>Bio</h4>
+        <p id="aboutBio"></p>
+      </div>
+      <div class="about-profile-stats">
+        <span><b id="aboutFollowers">0</b> followers</span>
+        <span class="about-pipe">|</span>
+        <span><b id="aboutFollowing">0</b> following</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="blockProfileOverlay">
+    <div class="sheet">
+      <div class="sheet-copy">
+        <h3 class="sheet-title" id="blockTitle">Block this profile?</h3>
+        <p class="sheet-sub" id="blockSub">They won't be able to message you or find your profile.</p>
+      </div>
+      <div class="confirm-actions">
+        <button class="ghost" onclick="closeBlockProfile()">Cancel</button>
+        <button class="danger" onclick="confirmBlockProfile()">Block</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="reportProfileOverlay">
+    <div class="sheet">
+      <div class="sheet-copy">
+        <h3 class="sheet-title" id="reportTitle">Report this profile</h3>
+        <p class="sheet-sub">Your report is anonymous. Tell us what is wrong.</p>
+      </div>
+      <div class="report-reasons" id="reportReasons">
+        <button class="report-reason" onclick="pickReportReason(this)">Spam</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Harassment or bullying</button>
+        <button class="report-reason" onclick="pickReportReason(this)">False information</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Impersonation</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Inappropriate content</button>
+      </div>
+      <div class="confirm-actions">
+        <button class="ghost" onclick="closeReportProfile()">Cancel</button>
+        <button class="primary" onclick="submitProfileReport()">Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get('id');
+      if (userId) { openUserProfile(userId); }
+    });
+
+    function closeUserProfile() { window.history.back(); }
+    function toggleProfileMenu(e) { e.stopPropagation(); document.getElementById('upMenuDropdown').classList.toggle('open'); }
+    function profileMenuAction(action) { document.getElementById('upMenuDropdown').classList.remove('open'); showToast(action); }
+    function messageProfile() { showToast('Opening chat...'); }
+    function shareProfile() { showToast('Profile link copied'); }
+    function toggleProfileFollow() { const btn = document.getElementById('upFollowBtn'); btn.classList.toggle('following'); btn.textContent = btn.classList.has('following') ? 'Following' : 'Follow'; }
+    function setUpTab(tab) { document.querySelectorAll('.up-tabs .profile-tab').forEach(b => { b.classList.toggle('active', b.dataset.ptab === tab); b.setAttribute('aria-selected', b.dataset.ptab === tab); }); }
+    function openAboutProfile() { document.getElementById('aboutProfileOverlay').classList.add('open'); }
+    function closeAboutProfile() { document.getElementById('aboutProfileOverlay').classList.remove('open'); }
+    function closeBlockProfile() { document.getElementById('blockProfileOverlay').classList.remove('open'); }
+    function confirmBlockProfile() { showToast('User blocked'); closeBlockProfile(); }
+    function closeReportProfile() { document.getElementById('reportProfileOverlay').classList.remove('open'); }
+    function pickReportReason(btn) { document.querySelectorAll('.report-reason').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); }
+    function submitProfileReport() { showToast('Report submitted'); closeReportProfile(); }
+    window.closeUserProfile = closeUserProfile; window.toggleProfileMenu = toggleProfileMenu; window.profileMenuAction = profileMenuAction; window.messageProfile = messageProfile; window.shareProfile = shareProfile; window.toggleProfileFollow = toggleProfileFollow; window.setUpTab = setUpTab; window.openAboutProfile = openAboutProfile; window.closeAboutProfile = closeAboutProfile; window.closeBlockProfile = closeBlockProfile; window.confirmBlockProfile = confirmBlockProfile; window.closeReportProfile = closeReportProfile; window.pickReportReason = pickReportReason; window.submitProfileReport = submitProfileReport;
+  </script>
+</body>
+</html>

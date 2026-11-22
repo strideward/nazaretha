@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · church app</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-active">
+  <div class="app" id="appRoot">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="notif-btn toolbar-menu" id="toolbarMenu" onclick="openAppMenu()" aria-label="Menu">
+          <i class="iconoir-view-columns-2"></i>
+        </button>
+        <button class="notif-btn toolbar-plus" id="toolbarPlus" onclick="openCreateGroup()" aria-label="Create group chat">
+          <i class="iconoir-plus"></i>
+        </button>
+        <button class="back-btn" id="toolbarBack" onclick="closeNotifications()" aria-label="Back">
+          <i class="iconoir-nav-arrow-left"></i>
+        </button>
+      </div>
+      <h1 id="toolbarTitle">Home</h1>
+      <div class="toolbar-right">
+        <button class="notif-btn toolbar-chat-search" onclick="openPeopleSearch()" aria-label="Search people">
+          <i class="iconoir-search"></i>
+        </button>
+        <button class="notif-btn toolbar-settings" onclick="openSettings()" aria-label="Settings">
+          <i class="iconoir-settings"></i>
+        </button>
+        <button class="notif-btn" id="toolbarBell" onclick="openNotifications()" aria-label="Notifications">
+          <i class="iconoir-bell"></i>
+          <span class="notif-badge" id="notifBadge">3</span>
+        </button>
+      </div>
+    </div>
+
+    <main>
+      <section id="home"><div class="feed" id="feed"></div></section>
+
+      <section id="events" class="hidden">
+        <div class="events" id="eventsList"></div>
+        <button class="fab fab-events" onclick="openEventComposer()" aria-label="Create event"><i class="iconoir-plus"></i></button>
+      </section>
+
+      <section id="search" class="hidden">
+        <div class="search-bar">
+          <button class="search-back" onclick="go('home')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+          <i class="iconoir-search"></i>
+          <input id="globalSearch" placeholder="Search people, posts, reels..." oninput="runSearch()">
+        </div>
+        <div class="search-tabs" id="searchTabs">
+          <button class="search-tab active" data-tab="all" onclick="setSearchTab('all')">All</button>
+          <button class="search-tab" data-tab="users" onclick="setSearchTab('users')">Users</button>
+          <button class="search-tab" data-tab="posts" onclick="setSearchTab('posts')">Posts</button>
+          <button class="search-tab" data-tab="photos" onclick="setSearchTab('photos')">Photos</button>
+          <button class="search-tab" data-tab="reels" onclick="setSearchTab('reels')">Reels</button>
+        </div>
+        <div class="search-results" id="searchResults"></div>
+      </section>
+
+      <section id="messages" class="hidden">
+        <div class="search-bar">
+          <i class="iconoir-search"></i>
+          <input id="chatSearch" placeholder="Search messages..." oninput="filterChats()">
+        </div>
+        <div class="chat-list" id="chatList"></div>
+      </section>
+
+      <section id="notifications" class="hidden">
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-head"><h3>Notifications</h3></div>
+          <div class="notif-list" id="notifList"></div>
+        </div>
+      </section>
+
+      <section id="profile" class="hidden">
+        <div class="profile-hero">
+          <div class="profile-avatar-wrap">
+            <input type="file" id="changeAvatarInput" accept="image/*" style="display:none" onchange="handleProfilePhotoChange('avatar', this)">
+            <div class="profile-avatar" id="myAvatar" onclick="document.getElementById('changeAvatarInput').click()" title="Change profile photo">AN</div>
+            <button type="button" class="avatar-change-badge" onclick="document.getElementById('changeAvatarInput').click()" aria-label="Change profile photo" title="Change profile photo">
+              <i class="iconoir-camera"></i>
+            </button>
+          </div>
+          <h2 id="myName"></h2>
+          <div class="role" id="myRole">eBuhleni</div>
+          <p class="bio" id="myBio">Walking the Shembe path. Sabbath blessings to the amaNazaretha family.</p>
+        </div>
+        <div class="profile-stats">
+          <div class="stat"><b id="myPosts">3</b><span>Posts</span></div>
+          <div class="stat"><b id="myFollowers">2.4k</b><span>Followers</span></div>
+          <div class="stat"><b id="myFollowing">312</b><span>Following</span></div>
+        </div>
+        <div class="profile-actions">
+          <button class="primary" onclick="openEditProfile()">Edit profile</button>
+          <button class="ghost" onclick="openInsight()">Insight</button>
+          <button class="ghost icon-only" onclick="shareProfile()" aria-label="Share profile"><i class="iconoir-share-android"></i></button>
+        </div>
+        <div class="profile-tabs" role="tablist" aria-label="Profile content">
+          <button class="profile-tab active" data-ptab="posts" role="tab" aria-selected="true" onclick="setProfileTab('posts')" aria-label="Posts"><i class="iconoir-view-grid"></i></button>
+          <button class="profile-tab" data-ptab="videos" role="tab" aria-selected="false" onclick="setProfileTab('videos')" aria-label="Videos"><i class="iconoir-media-video"></i></button>
+          <button class="profile-tab" data-ptab="liked" role="tab" aria-selected="false" onclick="setProfileTab('liked')" aria-label="Liked posts"><i class="iconoir-heart"></i></button>
+          <button class="profile-tab" data-ptab="saved" role="tab" aria-selected="false" onclick="setProfileTab('saved')" aria-label="Saved posts"><i class="iconoir-bookmark"></i></button>
+        </div>
+        <div class="profile-grid" id="profileGrid"></div>
+      </section>
+    </main>
+
+    <nav>
+      <button class="nav-btn active" data-page="home" aria-label="Home"><i class="iconoir-home"></i></button>
+      <button class="nav-btn" data-page="events" aria-label="Events"><i class="iconoir-calendar"></i></button>
+      <a class="nav-btn" href="create-panel.html" aria-label="Create post"><i class="iconoir-plus-square"></i></a>
+      <button class="nav-btn" data-page="messages" aria-label="Messages"><i class="iconoir-chat-bubble"></i></button>
+      <button class="nav-btn" data-page="profile" aria-label="Profile"><i class="iconoir-user"></i></button>
+    </nav>
+  </div>
+
+  <div class="chat-thread" id="chatThread">
+    <div class="thread-top">
+      <button class="back-btn" onclick="closeThread()"><i class="iconoir-nav-arrow-left"></i></button>
+      <button type="button" class="chat-avatar" id="threadAvatar" style="width:40px;height:40px;font-size:14px" onclick="openActiveChatProfile()" aria-label="View profile"></button>
+      <div class="chat-meta" onclick="openActiveChatProfile()">
+        <b id="threadName"></b>
+        <p id="threadStatus">Online</p>
+      </div>
+      <button class="menu-btn" style="margin-left:auto" onclick="showToast('Chat options')"><i class="iconoir-menu"></i></button>
+    </div>
+    <div class="thread-messages" id="threadMessages"></div>
+    <div class="thread-input">
+      <button class="composer-btn" onclick="document.getElementById('chatFile').click()" aria-label="Attach photo or video"><i class="iconoir-media-image"></i></button>
+      <input id="threadInput" placeholder="Message..." onkeydown="if(event.key==='Enter')sendThreadMsg()">
+      <span class="rec-timer hidden" id="recTimer">0:00</span>
+      <button class="composer-btn" id="micBtn" onclick="toggleVoiceRecording()" aria-label="Record voice note"><i class="iconoir-microphone"></i></button>
+      <button class="composer-send" onclick="sendThreadMsg()"><i class="iconoir-send"></i></button>
+    </div>
+    <input type="file" id="chatFile" accept="image/*,video/*" hidden onchange="sendChatFile(this)">
+  </div>
+
+  <div class="create-group" id="createGroup">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closeCreateGroup()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>Create group chat</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="cg-types">
+        <button type="button" class="cg-type active" data-type="private" onclick="setGroupType('private')">
+          <span class="cg-type-icon"><i class="iconoir-lock"></i></span>
+          <span><b>Private</b><small>For friends</small></span>
+          <span class="cg-check"><i class="iconoir-check"></i></span>
+        </button>
+        <button type="button" class="cg-type" data-type="public" onclick="setGroupType('public')">
+          <span class="cg-type-icon"><i class="iconoir-globe"></i></span>
+          <span><b>Public</b><small>For communities</small></span>
+          <span class="cg-check"><i class="iconoir-check"></i></span>
+        </button>
+      </div>
+      <div class="search-bar cg-search">
+        <i class="iconoir-search"></i>
+        <input id="cgSearch" placeholder="Search people..." oninput="renderGroupMembers()">
+      </div>
+      <div class="cg-label">Select members</div>
+      <div class="cg-users" id="cgUsers"></div>
+    </div>
+    <div class="cg-footer">
+      <button class="cg-create" id="cgCreateBtn" onclick="createGroupChat()" disabled>Create</button>
+    </div>
+  </div>
+
+  <div class="create-group" id="peopleSearch">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closePeopleSearch()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>New message</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="search-bar cg-search">
+        <i class="iconoir-search"></i>
+        <input id="peopleSearchInput" placeholder="Search people you follow..." oninput="renderPeopleSearch()">
+      </div>
+      <div class="ps-list" id="peopleSearchList"></div>
+    </div>
+  </div>
+
+  <div class="create-group" id="requestsPanel">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closeRequests()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>Message requests</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="cg-label">From people you don't follow</div>
+      <div id="requestsList"></div>
+      <p class="app-hint">Accepting moves the conversation into your inbox.</p>
+    </div>
+  </div>
+
+  <div class="create-group" id="settingsPanel">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closeSettings()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>Settings</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="profile-section">
+        <h3>Account</h3>
+        <div class="profile-menu">
+          <button class="profile-row" onclick="closeSettings(); openEditProfile()">
+            <span class="row-icon"><i class="iconoir-user"></i></span>
+            Edit profile
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="closeSettings(); go('profile'); setProfileTab('saved')">
+            <span class="row-icon"><i class="iconoir-bookmark"></i></span>
+            Saved posts
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('My prayer requests')">
+            <span class="row-icon"><i class="iconoir-heart"></i></span>
+            My prayer requests
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="closeSettings(); go('events')">
+            <span class="row-icon"><i class="iconoir-calendar"></i></span>
+            Event reminders
+            <span class="profile-badge">3</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="closeSettings(); go('messages')">
+            <span class="row-icon"><i class="iconoir-chat-bubble"></i></span>
+            Messages
+            <span class="profile-badge">5</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('Privacy settings')">
+            <span class="row-icon"><i class="iconoir-shield"></i></span>
+            Privacy
+            <span class="set-value">Friends</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h3>Notifications</h3>
+        <div class="profile-menu">
+          <label class="profile-row">
+            <span class="row-icon"><i class="iconoir-bell"></i></span>
+            Push notifications
+            <input type="checkbox" class="set-switch" checked onchange="showToast(this.checked ? 'Notifications on' : 'Notifications off')">
+          </label>
+          <label class="profile-row">
+            <span class="row-icon"><i class="iconoir-inbox"></i></span>
+            Message requests
+            <input type="checkbox" class="set-switch" checked onchange="showToast(this.checked ? 'Requests allowed' : 'Requests blocked')">
+          </label>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h3>Preferences</h3>
+        <div class="profile-menu">
+          <button class="profile-row" onclick="showToast('Appearance: Light')">
+            <span class="row-icon"><i class="iconoir-sun-light"></i></span>
+            Appearance
+            <span class="set-value">Light</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('Help & support')">
+            <span class="row-icon"><i class="iconoir-help-circle"></i></span>
+            Help & support
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row danger" onclick="logout()">
+            <span class="row-icon"><i class="iconoir-log-out"></i></span>
+            Log out
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+        </div>
+      </div>
+      <p class="app-hint" style="text-align: center;">Amanazaretha Church App · Version 1.0</p>
+    </div>
+  </div>
+
+  <div id="reels" class="hidden">
+    <div class="reels-top">
+      <div class="reels-tabs">
+        <button type="button" class="reels-tab active" data-feed="foryou" onclick="setReelFeed('foryou')">For You</button>
+        <button type="button" class="reels-tab" data-feed="following" onclick="setReelFeed('following')">Following</button>
+      </div>
+      <div class="reels-chips" id="reelsChips"></div>
+    </div>
+    <div class="reels-feed" id="reelsFeed"></div>
+  </div>
+
+  <div id="postVideoPlayer"></div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
+
+  <div class="comments-sheet" id="commentsSheet">
+    <div class="comments-handle"></div>
+    <div class="comments-head">
+      <h3 id="commentsTitle">Comments</h3>
+      <button onclick="closeComments()"><i class="iconoir-xmark"></i></button>
+    </div>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="comments-input-row">
+      <input id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')postComment()">
+      <button onclick="postComment()"><i class="iconoir-send"></i></button>
+    </div>
+  </div>
+
+  <div class="reel-menu-sheet" id="reelMenuSheet">
+    <div class="reel-menu-handle"></div>
+    <button class="menu-item" id="reelMenuEditBtn" style="display:none" onclick="openEditReel(activeMenuReelId)"><i class="iconoir-edit-pencil"></i>Edit caption & tags</button>
+    <button class="menu-item danger" id="reelMenuDeleteBtn" style="display:none" onclick="deleteReel(activeMenuReelId)"><i class="iconoir-trash"></i>Delete video</button>
+    <button class="menu-item" onclick="reelMenuAction('Why you're seeing this reel')"><i class="iconoir-info-circle"></i>Why you're seeing this reel</button>
+    <button class="menu-item" onclick="reelMenuAction('Marked as interested')"><i class="iconoir-thumbs-up"></i>Interested</button>
+    <button class="menu-item" onclick="reelMenuAction('You will see fewer reels like this')"><i class="iconoir-thumbs-down"></i>Not interested</button>
+    <button class="menu-item" onclick="reelMenuAction('Saved to your collection')"><i class="iconoir-bookmark"></i>Save reel</button>
+    <button class="menu-item danger" onclick="reelMenuAction('Report submitted')"><i class="iconoir-flag"></i>Report</button>
+  </div>
+
+  <div class="overlay" id="menuOverlay">
+    <div class="sheet">
+      <button class="menu-item" id="menuEditBtn" style="display:none" onclick="closeMenu();openEditPost(activeMenuPostId)"><i class="iconoir-edit-pencil"></i>Edit post</button>
+      <button class="menu-item danger" id="menuDeleteBtn" style="display:none" onclick="closeMenu();deletePost(activeMenuPostId)"><i class="iconoir-trash"></i>Delete post</button>
+      <button class="menu-item" onclick="menuAction('Why you are seeing this post')"><i class="iconoir-info-circle"></i>Why you're seeing this post</button>
+      <button class="menu-item" onclick="menuAction('Marked as interested')"><i class="iconoir-thumbs-up"></i>Interested</button>
+      <button class="menu-item" onclick="menuAction('You will see fewer posts like this')"><i class="iconoir-thumbs-down"></i>Not interested</button>
+      <button class="menu-item danger" onclick="menuAction('Report submitted')"><i class="iconoir-flag"></i>Report</button>
+    </div>
+  </div>
+
+<div class="overlay" id="appMenuOverlay">
+    <div class="sheet">
+      <button class="menu-item" onclick="closeAppMenu();go('search')"><i class="iconoir-search"></i>Search</button>
+      <button class="menu-item" onclick="closeAppMenu();go('reels')"><i class="iconoir-media-video"></i>Reels</button>
+      <button class="menu-item" onclick="closeAppMenu();openNotifications()"><i class="iconoir-bell"></i>Notifications<span class="profile-badge" id="menuNotifBadge">3</span></button>
+      <button class="menu-item" onclick="closeAppMenu();window.location.href='login.html'"><i class="iconoir-user-plus"></i>Register</button>
+      <button class="menu-item" onclick="closeAppMenu();window.location.href='settings.html'"><i class="iconoir-settings"></i>Settings</button>
+    </div>
+  </div>
+  </div>
+
+  <div class="overlay" id="aboutProfileOverlay">
+    <div class="sheet">
+      <div class="about-profile-head">
+        <span class="about-profile-avatar" id="aboutAvatar"></span>
+        <div class="about-profile-id">
+          <h3 id="aboutName"></h3>
+          <p id="aboutRole"></p>
+        </div>
+        <button class="insight-close" onclick="closeAboutProfile()" aria-label="Close"><i class="iconoir-xmark"></i></button>
+      </div>
+      <div class="about-profile-rows">
+        <div class="about-row"><span>Full name</span><b id="aboutFullName"></b></div>
+        <div class="about-row"><span>Age</span><b id="aboutAge"></b></div>
+        <div class="about-row"><span>Gender</span><b id="aboutGender"></b></div>
+        <div class="about-row"><span>Temple</span><b id="aboutTemple"></b></div>
+        <div class="about-row"><span>Joined</span><b id="aboutJoined"></b></div>
+        <div class="about-row"><span>Lives in</span><b id="aboutLocation"></b></div>
+      </div>
+      <div class="about-profile-bio">
+        <h4>Bio</h4>
+        <p id="aboutBio"></p>
+      </div>
+      <div class="about-profile-stats">
+        <span><b id="aboutFollowers">0</b> followers</span>
+        <span class="about-pipe">|</span>
+        <span><b id="aboutFollowing">0</b> following</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="blockProfileOverlay">
+    <div class="sheet">
+      <div class="sheet-copy">
+        <h3 class="sheet-title" id="blockTitle">Block this profile?</h3>
+        <p class="sheet-sub" id="blockSub">They won't be able to message you or find your profile.</p>
+      </div>
+      <div class="confirm-actions">
+        <button class="ghost" onclick="closeBlockProfile()">Cancel</button>
+        <button class="danger" onclick="confirmBlockProfile()">Block</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="reportProfileOverlay">
+    <div class="sheet">
+      <div class="sheet-copy">
+        <h3 class="sheet-title" id="reportTitle">Report this profile</h3>
+        <p class="sheet-sub">Your report is anonymous. Tell us what is wrong.</p>
+      </div>
+      <div class="report-reasons" id="reportReasons">
+        <button class="report-reason" onclick="pickReportReason(this)">Spam</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Harassment or bullying</button>
+        <button class="report-reason" onclick="pickReportReason(this)">False information</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Impersonation</button>
+        <button class="report-reason" onclick="pickReportReason(this)">Inappropriate content</button>
+      </div>
+      <div class="confirm-actions">
+        <button class="ghost" onclick="closeReportProfile()">Cancel</button>
+        <button class="primary" onclick="submitProfileReport()">Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="insightOverlay">
+    <div class="sheet insight-sheet">
+      <div class="insight-head">
+        <div>
+          <h3>Insights</h3>
+          <p id="insightName"></p>
+        </div>
+        <button class="insight-close" onclick="closeInsight()" aria-label="Close"><i class="iconoir-xmark"></i></button>
+      </div>
+      <div class="insight-grid">
+        <div class="insight-cell"><b id="insightViews">0</b><span>Profile views</span></div>
+        <div class="insight-cell"><b id="insightReach">0</b><span>Reach</span></div>
+        <div class="insight-cell"><b id="insightEngagement">0%</b><span>Engagement</span></div>
+      </div>
+      <p class="insight-note">Last 30 days</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="editProfileOverlay">
+    <div class="sheet">
+      <div style="padding:6px 18px 0">
+        <h3 class="sheet-title">Edit profile</h3>
+        <p class="sheet-sub">Update your profile info, photos, and bio.</p>
+      </div>
+      <div style="padding:14px 18px 0;max-height:65vh;overflow-y:auto">
+        <div style="margin-bottom:18px">
+          <span style="display:block;font-size:11px;font-weight:800;text-transform:uppercase;color:#6d7681;margin-bottom:8px">Profile photo</span>
+          <input type="file" id="editAvatarInput" accept="image/*" style="display:none" onchange="previewEditPhoto('avatar', this)">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div id="editAvatarThumb" onclick="document.getElementById('editAvatarInput').click()" style="width:58px;height:58px;border-radius:50%;background:#0c0c0c;color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px;cursor:pointer;overflow:hidden;border:2px solid #e3e3e3;background-size:cover;background-position:center" title="Upload profile photo">
+              <i class="iconoir-camera" style="width:22px;height:22px"></i>
+            </div>
+            <button type="button" class="auth-link" style="height:36px;padding:0 16px;font-size:13px" onclick="document.getElementById('editAvatarInput').click()">Change photo</button>
+          </div>
+        </div>
+        <div class="reg-field">
+          <label for="editName">Name</label>
+          <input id="editName" type="text" maxlength="60" placeholder="Your full name">
+        </div>
+        <div class="reg-field" style="margin-bottom:0">
+          <label for="editBio">Bio</label>
+          <textarea id="editBio" rows="3" maxlength="160" placeholder="Tell the church family about yourself"></textarea>
+        </div>
+      </div>
+      <div class="sheet-actions" style="padding:14px 18px 18px">
+        <button class="ghost" style="flex:1" onclick="closeEditProfile()">Cancel</button>
+        <button class="primary" style="flex:1" onclick="saveProfile()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail" id="postDetail">
+    <div class="detail-top" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <button class="back-btn" onclick="closeDetail()"><i class="iconoir-nav-arrow-left"></i></button>
+      <div><b style="font-size:14px" id="detailTemple">amaNazaretha Church</b><div style="font-size:11px;color:var(--muted)" id="detailTime"></div></div>
+      <button class="menu-btn" id="detailMenuBtn" style="margin-left:auto" onclick="openPostMenu(openDetailId)" aria-label="Post options"><i class="iconoir-menu"></i></button>
+    </div>
+    <div class="detail-media" id="detailMedia"></div>
+    <div class="detail-body">
+      <h2 id="detailTitle"></h2>
+      <p id="detailText"></p>
+      <div class="detail-meta" id="detailTags"></div>
+      <div class="post-time" id="detailPostTime"></div>
+    </div>
+    <div class="detail-actions">
+      <div class="left-actions">
+        <button class="action" id="detailLike" onclick="toggleLike(document.getElementById('detailLike'))"><i class="iconoir-heart"></i><span>0</span></button>
+        <button class="action" id="detailComment" onclick="openPostComments(openDetailId)"><i class="iconoir-chat-bubble"></i><span>0</span></button>
+        <button class="action" id="detailRepost" onclick="toggleRepost(document.getElementById('detailRepost'))"><i class="iconoir-repeat"></i><span>0</span></button>
+        <button class="action" onclick="sharePostLink(openDetailId)"><i class="iconoir-share-android"></i></button>
+      </div>
+      <button class="action" id="detailSave" onclick="toggleSave(document.getElementById('detailSave'))"><i class="iconoir-bookmark"></i></button>
+    </div>
+  </div>
+
+  <div class="event-view" id="eventView" aria-hidden="true">
+    <div class="ev-hero" id="evHero">
+      <button class="ev-back" onclick="closeEvent()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <div class="ev-hero-blur" aria-hidden="true"></div>
+      <div class="ev-hero-date"><b id="evDay">21</b><span id="evMonth">NOV</span></div>
+    </div>
+    <div class="ev-scroll" id="evScroll">
+      <p class="ev-kicker" id="evKicker"></p>
+      <h1 class="ev-title" id="evTitle"></h1>
+      <p class="ev-when" id="evWhen"></p>
+      <div class="ev-info">
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-calendar"></i></span><div><b>Date</b><span id="evDate"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-clock"></i></span><div><b>Time</b><span id="evTime"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-pin"></i></span><div><b>Venue</b><span id="evVenue"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-church-side"></i></span><div><b>Hosted by</b><span id="evHost"></span></div></div>
+      </div>
+      <h2 class="ev-section">About this event</h2>
+      <p class="ev-desc" id="evDesc"></p>
+      <div class="ev-going">
+        <div class="ev-going-avatars" id="evGoingAvatars"></div>
+        <p id="evCount"></p>
+      </div>
+    </div>
+    <div class="ev-footer">
+      <button class="ev-remind-btn" id="evRemindBtn" onclick="toggleEventRemind()"></button>
+      <button class="ev-share-btn" onclick="shareEventLink()" aria-label="Share event"><i class="iconoir-share-android"></i></button>
+    </div>
+  </div>
+
+  <div class="user-profile" id="userProfile">
+    <div class="up-banner" id="upBanner">
+      <button class="up-back" onclick="closeUserProfile()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <div class="up-banner-blur" aria-hidden="true"></div>
+      <div class="up-menu-wrap">
+        <button class="up-menu-btn" id="upMenuBtn" onclick="toggleProfileMenu(event)" aria-label="Profile options" aria-haspopup="true" aria-expanded="false"><i class="iconoir-menu"></i></button>
+        <div class="up-menu-dropdown" id="upMenuDropdown" role="menu">
+          <button class="up-menu-item" role="menuitem" onclick="profileMenuAction('about')"><i class="iconoir-user"></i>About this profile</button>
+          <button class="up-menu-item danger" role="menuitem" onclick="profileMenuAction('block')"><i class="iconoir-prohibition"></i>Block</button>
+          <button class="up-menu-item danger" role="menuitem" onclick="profileMenuAction('report')"><i class="iconoir-flag"></i>Report</button>
+        </div>
+      </div>
+    </div>
+    <div class="up-body">
+      <div class="up-avatar" id="upAvatar"></div>
+      <h2 class="up-name" id="upName"></h2>
+      <p class="up-bio" id="upBio"></p>
+      <div class="up-stats">
+        <div class="up-stat"><b id="upFollowers">0</b><span>Followers</span></div>
+        <span class="up-divider">|</span>
+        <div class="up-stat"><b id="upFollowing">0</b><span>Following</span></div>
+      </div>
+      <div class="up-actions">
+        <button class="up-follow" id="upFollowBtn" onclick="toggleProfileFollow()">Follow</button>
+        <button class="up-ghost" onclick="messageProfile()">Message</button>
+        <button class="up-share" onclick="shareProfile()" aria-label="Share profile"><i class="iconoir-share-android"></i></button>
+      </div>
+      <div class="up-tabs profile-tabs" role="tablist" aria-label="User content">
+        <button class="profile-tab active" data-ptab="posts" role="tab" aria-selected="true" onclick="setUpTab('posts')" aria-label="Posts"><i class="iconoir-view-grid"></i></button>
+        <button class="profile-tab" data-ptab="videos" role="tab" aria-selected="false" onclick="setUpTab('videos')" aria-label="Videos"><i class="iconoir-media-video"></i></button>
+        <button class="profile-tab" data-ptab="liked" role="tab" aria-selected="false" onclick="setUpTab('liked')" aria-label="Liked posts"><i class="iconoir-heart"></i></button>
+        <button class="profile-tab" data-ptab="saved" role="tab" aria-selected="false" onclick="setUpTab('saved')" aria-label="Saved posts"><i class="iconoir-bookmark"></i></button>
+      </div>
+      <div class="profile-grid" id="upGrid"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

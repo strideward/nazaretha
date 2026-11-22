@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Settings</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="create-group" id="settingsPanel">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closeSettings()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>Settings</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="profile-section">
+        <h3>Account</h3>
+        <div class="profile-menu">
+          <button class="profile-row" onclick="openEditProfile()">
+            <span class="row-icon"><i class="iconoir-user"></i></span>
+            Edit profile
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="window.location.href='home.html#profile'; setProfileTab('saved')">
+            <span class="row-icon"><i class="iconoir-bookmark"></i></span>
+            Saved posts
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('My prayer requests')">
+            <span class="row-icon"><i class="iconoir-heart"></i></span>
+            My prayer requests
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="window.location.href='home.html#events'">
+            <span class="row-icon"><i class="iconoir-calendar"></i></span>
+            Event reminders
+            <span class="profile-badge">3</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="window.location.href='home.html#messages'">
+            <span class="row-icon"><i class="iconoir-chat-bubble"></i></span>
+            Messages
+            <span class="profile-badge">5</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('Privacy settings')">
+            <span class="row-icon"><i class="iconoir-shield"></i></span>
+            Privacy
+            <span class="set-value">Friends</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h3>Notifications</h3>
+        <div class="profile-menu">
+          <label class="profile-row">
+            <span class="row-icon"><i class="iconoir-bell"></i></span>
+            Push notifications
+            <input type="checkbox" class="set-switch" checked onchange="showToast(this.checked ? 'Notifications on' : 'Notifications off')">
+          </label>
+          <label class="profile-row">
+            <span class="row-icon"><i class="iconoir-inbox"></i></span>
+            Message requests
+            <input type="checkbox" class="set-switch" checked onchange="showToast(this.checked ? 'Requests allowed' : 'Requests blocked')">
+          </label>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h3>Preferences</h3>
+        <div class="profile-menu">
+          <button class="profile-row" onclick="showToast('Appearance: Light')">
+            <span class="row-icon"><i class="iconoir-sun-light"></i></span>
+            Appearance
+            <span class="set-value">Light</span>
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row" onclick="showToast('Help & support')">
+            <span class="row-icon"><i class="iconoir-help-circle"></i></span>
+            Help & support
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+          <button class="profile-row danger" onclick="logout()">
+            <span class="row-icon"><i class="iconoir-log-out"></i></span>
+            Log out
+            <span class="chev"><i class="iconoir-nav-arrow-right"></i></span>
+          </button>
+        </div>
+      </div>
+      <p class="app-hint" style="text-align: center;">Amanazaretha Church App · Version 1.0</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    function closeSettings() { window.history.back(); }
+    function openEditProfile() { showToast('Opening edit profile...'); }
+    function logout() { showToast('Logged out'); setTimeout(() => { window.location.href = 'login.html'; }, 1000); }
+    window.closeSettings = closeSettings; window.openEditProfile = openEditProfile; window.logout = logout;
+  </script>
+</body>
+</html>

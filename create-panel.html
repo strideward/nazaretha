@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Create</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .camera-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      max-width: 430px;
+      margin: 0 auto;
+      display: none;
+    }
+    .camera-screen.open { display: flex; }
+    .cam-view { flex: 1; position: relative; overflow: hidden; background: #000; }
+    .cam-view video, .cam-view .cam-fallback { width: 100%; height: 100%; object-fit: cover; }
+    .cam-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; gap: 8px; }
+    .cam-fallback i { font-size: 48px; opacity: 0.5; }
+    .cam-top { position: absolute; top: 0; left: 0; right: 0; padding: env(safe-area-inset-top, 12px) 16px 12px; display: flex; align-items: center; justify-content: space-between; z-index: 10; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.5), transparent); }
+    .cam-top > * { pointer-events: auto; }
+    .cam-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(8px); transition: background 0.2s; }
+    .cam-btn:active { background: rgba(0,0,0,0.6); }
+    .cam-mode-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.4); border-radius: 24px; padding: 4px; backdrop-filter: blur(8px); }
+    .cam-mode-tab { padding: 6px 16px; border-radius: 20px; border: none; background: transparent; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .cam-mode-tab.active { background: #fff; color: #000; }
+    .cam-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 16px); display: flex; justify-content: center; z-index: 10; }
+    .cam-controls { display: flex; align-items: center; gap: 24px; width: 100%; max-width: 400px; justify-content: space-between; }
+    .cam-record { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #fff; background: transparent; position: relative; flex-shrink: 0; }
+    .cam-record span { display: block; width: 56px; height: 56px; border-radius: 50%; background: #ff3b30; margin: 4px auto; transition: transform 0.1s, border-radius 0.2s; }
+    .cam-record.recording span { width: 32px; height: 32px; border-radius: 8px; }
+    .cam-record:active span { transform: scale(0.95); }
+    .cam-flip { width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; backdrop-filter: blur(8px); flex-shrink: 0; }
+    .media-preview { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: #1a1a1a; position: relative; flex-shrink: 0; cursor: pointer; }
+    .media-preview video, .media-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666; font-size: 24px; }
+    @media (max-width: 380px) { .cam-controls { gap: 16px; } .cam-record { width: 68px; height: 68px; } .cam-record span { width: 48px; height: 48px; } .cam-flip { width: 48px; height: 48px; } .media-preview { width: 48px; height: 48px; } .cam-mode-tab { padding: 6px 12px; font-size: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="camera-screen" id="createPanel">
+    <div class="cam-view">
+      <video id="camVideo" autoplay muted playsinline class="hidden"></video>
+      <div class="cam-fallback" id="camFallback">
+        <i class="iconoir-camera"></i>
+        <span>Camera preview</span>
+      </div>
+    </div>
+
+    <div class="cam-top">
+      <button class="cam-btn cam-btn-left" onclick="closeCreatePanel()" aria-label="Cancel"><i class="iconoir-xmark"></i></button>
+      <div class="cam-mode-tabs" role="tablist" aria-label="Capture mode">
+        <button class="cam-mode-tab active" role="tab" data-mode="video" onclick="setCaptureMode('video')" aria-selected="true">Video</button>
+        <button class="cam-mode-tab" role="tab" data-mode="photo" onclick="setCaptureMode('photo')" aria-selected="false">Photo</button>
+        <button class="cam-mode-tab" role="tab" data-mode="text" onclick="setCaptureMode('text')" aria-selected="false">Text</button>
+      </div>
+      <button class="cam-btn cam-btn-right" id="flashBtn" onclick="toggleFlash()" aria-label="Flash"><i class="iconoir-flash"></i></button>
+    </div>
+
+    <div class="cam-bottom">
+      <div class="cam-controls">
+        <button class="cam-btn cam-flip" id="camFlipBtn" onclick="flipCamera()" aria-label="Switch camera"><i class="iconoir-rotate-camera-right"></i></button>
+        <button type="button" class="cam-record" id="camRecord"
+          onpointerdown="camPressStart()" onpointerup="camPressEnd()" onpointercancel="camPressEnd()"
+          onclick="camTap()" aria-label="Take photo or record video"><span></span></button>
+        <div class="media-preview" id="mediaPreview" onclick="openMediaPicker()" aria-label="Open gallery" role="button" tabindex="0">
+          <video id="previewVideo" class="hidden" muted playsinline></video>
+          <img id="previewImg" class="hidden" alt="Last media">
+          <div class="preview-placeholder" id="previewPlaceholder">
+            <i class="iconoir-media-image"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="camFile" accept="image/*,video/*" hidden onchange="loadCamFile(this)">
+    <input type="file" id="galleryFile" accept="image/*,video/*" hidden onchange="loadGalleryFile(this)">
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    let currentCaptureMode = 'video';
+    let isRecording = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let currentStream = null;
+    let facingMode = 'environment';
+    let flashEnabled = false;
+
+    function openCreatePanel() { document.getElementById('createPanel').classList.add('open'); document.body.style.overflow = 'hidden'; startCamera(); loadLastMedia(); }
+    function closeCreatePanel() { stopCamera(); document.getElementById('createPanel').classList.remove('open'); document.body.style.overflow = ''; resetCaptureUI(); window.history.back(); }
+    async function startCamera() { const video = document.getElementById('camVideo'); const fallback = document.getElementById('camFallback'); try { currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: currentCaptureMode === 'video' }); video.srcObject = currentStream; video.classList.remove('hidden'); fallback.classList.add('hidden'); } catch (err) { console.error('Camera error:', err); video.classList.add('hidden'); fallback.classList.remove('hidden'); } }
+    function stopCamera() { if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); currentStream = null; } if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); } document.getElementById('camVideo').classList.add('hidden'); document.getElementById('camFallback').classList.remove('hidden'); }
+    function flipCamera() { facingMode = facingMode === 'environment' ? 'user' : 'environment'; stopCamera(); startCamera(); }
+    function toggleFlash() { flashEnabled = !flashEnabled; const btn = document.getElementById('flashBtn'); btn.innerHTML = flashEnabled ? '<i class="iconoir-flash"></i>' : '<i class="iconoir-flash-off"></i>'; btn.style.background = flashEnabled ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.4)'; btn.style.color = flashEnabled ? '#000' : '#fff'; if (currentStream) { const track = currentStream.getVideoTracks()[0]; if (track && track.getCapabilities().torch) { track.applyConstraints({ advanced: [{ torch: flashEnabled }] }).catch(console.error); } } }
+    function setCaptureMode(mode) { currentCaptureMode = mode; document.querySelectorAll('.cam-mode-tab').forEach(tab => { tab.classList.toggle('active', tab.dataset.mode === mode); tab.setAttribute('aria-selected', tab.dataset.mode === mode); }); if (currentStream) { stopCamera(); startCamera(); } const recordBtn = document.getElementById('camRecord'); recordBtn.classList.toggle('photo-mode', mode === 'photo'); }
+    function camPressStart() { if (currentCaptureMode !== 'video') return; isRecording = true; recordedChunks = []; const videoTrack = currentStream.getVideoTracks()[0]; const audioTrack = currentStream.getAudioTracks()[0]; const stream = new MediaStream([videoTrack, audioTrack].filter(Boolean)); mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' }); mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; mediaRecorder.start(100); document.getElementById('camRecord').classList.add('recording'); }
+    function camPressEnd() { if (!isRecording) return; isRecording = false; if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); } document.getElementById('camRecord').classList.remove('recording'); }
+    function camTap() { if (currentCaptureMode === 'video') return; if (currentCaptureMode === 'photo') { capturePhoto(); } else if (currentCaptureMode === 'text') { closeCreatePanel(); setTimeout(() => { window.location.href = 'post-composer.html'; }, 100); } }
+    function capturePhoto() { const video = document.getElementById('camVideo'); const canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; const ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0); canvas.toBlob(blob => { const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' }); handleCapturedFile(file); }, 'image/jpeg', 0.9); }
+    function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' }); handleCapturedFile(file); }
+    function handleCapturedFile(file) { const url = URL.createObjectURL(file); const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); if (file.type.startsWith('video/')) { previewVideo.src = url; previewVideo.classList.remove('hidden'); previewImg.classList.add('hidden'); } else { previewImg.src = url; previewImg.classList.remove('hidden'); previewVideo.classList.add('hidden'); } placeholder.classList.add('hidden'); window.lastCapturedFile = file; window.lastCapturedUrl = url; sessionStorage.setItem('lastCapturedFile', JSON.stringify({ type: file.type, name: file.name, size: file.size })); sessionStorage.setItem('lastCapturedUrl', url); }
+    function resetCaptureUI() { document.getElementById('camRecord').classList.remove('recording', 'photo-mode'); isRecording = false; }
+    function openMediaPicker() { document.getElementById('galleryFile').click(); }
+    function loadGalleryFile(input) { const file = input.files[0]; if (!file) return; const url = URL.createObjectURL(file); const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); if (file.type.startsWith('video/')) { previewVideo.src = url; previewVideo.classList.remove('hidden'); previewImg.classList.add('hidden'); } else { previewImg.src = url; previewImg.classList.remove('hidden'); previewVideo.classList.add('hidden'); } placeholder.classList.add('hidden'); window.lastCapturedFile = file; window.lastCapturedUrl = url; sessionStorage.setItem('lastCapturedFile', JSON.stringify({ type: file.type, name: file.name, size: file.size })); sessionStorage.setItem('lastCapturedUrl', url); input.value = ''; }
+    function loadCamFile(input) { const file = input.files[0]; if (!file) return; handleCapturedFile(file); input.value = ''; }
+    async function loadLastMedia() { const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); const savedUrl = sessionStorage.getItem('lastCapturedUrl'); if (savedUrl) { const savedFile = sessionStorage.getItem('lastCapturedFile'); if (savedFile) { try { const f = JSON.parse(savedFile); if (f.type.startsWith('video/')) { previewVideo.src = savedUrl; previewVideo.classList.remove('hidden'); previewImg.classList.add('hidden'); } else { previewImg.src = savedUrl; previewImg.classList.remove('hidden'); previewVideo.classList.add('hidden'); } placeholder.classList.add('hidden'); return; } catch(e) {} } } placeholder.classList.remove('hidden'); previewVideo.classList.add('hidden'); previewImg.classList.add('hidden'); }
+
+    document.addEventListener('DOMContentLoaded', () => { openCreatePanel(); });
+    window.openCreatePanel = openCreatePanel; window.closeCreatePanel = closeCreatePanel; window.flipCamera = flipCamera; window.toggleFlash = toggleFlash; window.setCaptureMode = setCaptureMode; window.camPressStart = camPressStart; window.camPressEnd = camPressEnd; window.camTap = camTap; window.openMediaPicker = openMediaPicker; window.loadCamFile = loadCamFile; window.loadGalleryFile = loadGalleryFile; window.loadLastMedia = loadLastMedia;
+  </script>
+  <div class="toast" id="toast"></div>
+</body>
+</html>

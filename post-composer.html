@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · New Post</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="create-group" id="postComposer">
+    <div class="cg-top">
+      <button class="back-btn" onclick="closePostComposer()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <h2>New post</h2>
+    </div>
+    <div class="cg-scroll">
+      <div class="pc-media" id="pcMedia" onclick="document.getElementById('pcFile').click()">
+        <i class="iconoir-media-image-plus"></i>
+        <span>Add photo or video</span>
+      </div>
+      <textarea id="pcCaption" class="pc-caption" rows="4" placeholder="What would you like to share?"></textarea>
+      <div class="cg-label">Tags</div>
+      <div class="pc-tags">
+        <button type="button" class="pc-tag" data-tag="#Amanazaretha" onclick="togglePostTag(this)">#Amanazaretha</button>
+        <button type="button" class="pc-tag" data-tag="#Sabbath" onclick="togglePostTag(this)">#Sabbath</button>
+        <button type="button" class="pc-tag" data-tag="#Worship" onclick="togglePostTag(this)">#Worship</button>
+        <button type="button" class="pc-tag" data-tag="#Faith" onclick="togglePostTag(this)">#Faith</button>
+      </div>
+      <input type="file" id="pcFile" accept="image/*,video/*" hidden onchange="loadPostFile(this)">
+    </div>
+    <div class="cg-footer">
+      <button class="cg-create" onclick="sharePost()">Share post</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('postComposer').classList.remove('hidden');
+      const savedUrl = sessionStorage.getItem('lastCapturedUrl');
+      const savedFile = sessionStorage.getItem('lastCapturedFile');
+      if (savedUrl && savedFile) {
+        try {
+          const f = JSON.parse(savedFile);
+          const pcMedia = document.getElementById('pcMedia');
+          if (f.type.startsWith('video/')) {
+            pcMedia.innerHTML = `<video src="${savedUrl}" muted playsinline style="width:100%;border-radius:12px"></video>`;
+          } else {
+            pcMedia.innerHTML = `<img src="${savedUrl}" style="width:100%;border-radius:12px">`;
+          }
+          window.lastCapturedUrl = savedUrl;
+        } catch(e) {}
+      }
+    });
+
+    function closePostComposer() { window.history.back(); }
+    function loadPostFile(input) { const file = input.files[0]; if (!file) return; const url = URL.createObjectURL(file); const pcMedia = document.getElementById('pcMedia'); if (file.type.startsWith('video/')) { pcMedia.innerHTML = `<video src="${url}" muted playsinline style="width:100%;border-radius:12px"></video>`; } else { pcMedia.innerHTML = `<img src="${url}" style="width:100%;border-radius:12px">`; } window.lastCapturedFile = file; window.lastCapturedUrl = url; input.value = ''; }
+    function togglePostTag(btn) { btn.classList.toggle('active'); }
+    function sharePost() { const caption = document.getElementById('pcCaption').value; const tags = Array.from(document.querySelectorAll('.pc-tag.active')).map(b => b.dataset.tag).join(' '); const media = window.lastCapturedFile; showToast('Post shared!'); setTimeout(() => { window.location.href = 'home.html'; }, 1000); }
+    window.closePostComposer = closePostComposer; window.loadPostFile = loadPostFile; window.togglePostTag = togglePostTag; window.sharePost = sharePost;
+  </script>
+  <div class="toast" id="toast"></div>
+</body>
+</html>

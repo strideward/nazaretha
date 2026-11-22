@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Event</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="event-view" id="eventView" aria-hidden="false">
+    <div class="ev-hero" id="evHero">
+      <button class="ev-back" onclick="closeEvent()" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+      <div class="ev-hero-blur" aria-hidden="true"></div>
+      <div class="ev-hero-date"><b id="evDay">21</b><span id="evMonth">NOV</span></div>
+    </div>
+    <div class="ev-scroll" id="evScroll">
+      <p class="ev-kicker" id="evKicker"></p>
+      <h1 class="ev-title" id="evTitle"></h1>
+      <p class="ev-when" id="evWhen"></p>
+      <div class="ev-info">
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-calendar"></i></span><div><b>Date</b><span id="evDate"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-clock"></i></span><div><b>Time</b><span id="evTime"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-pin"></i></span><div><b>Venue</b><span id="evVenue"></span></div></div>
+        <div class="ev-info-row"><span class="ev-info-icon"><i class="iconoir-church-side"></i></span><div><b>Hosted by</b><span id="evHost"></span></div></div>
+      </div>
+      <h2 class="ev-section">About this event</h2>
+      <p class="ev-desc" id="evDesc"></p>
+      <div class="ev-going">
+        <div class="ev-going-avatars" id="evGoingAvatars"></div>
+        <p id="evCount"></p>
+      </div>
+    </div>
+    <div class="ev-footer">
+      <button class="ev-remind-btn" id="evRemindBtn" onclick="toggleEventRemind()"></button>
+      <button class="ev-share-btn" onclick="shareEventLink()" aria-label="Share event"><i class="iconoir-share-android"></i></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const eventId = params.get('id');
+      if (eventId) { openEvent(eventId); }
+    });
+
+    function closeEvent() { window.history.back(); }
+    function toggleEventRemind() { const btn = document.getElementById('evRemindBtn'); btn.classList.toggle('active'); showToast(btn.classList.has('active') ? 'Reminder set' : 'Reminder removed'); }
+    function shareEventLink() { showToast('Event link copied'); }
+    window.closeEvent = closeEvent; window.toggleEventRemind = toggleEventRemind; window.shareEventLink = shareEventLink;
+  </script>
+</body>
+</html>

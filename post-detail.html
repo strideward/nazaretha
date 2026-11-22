@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Post</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="detail" id="postDetail">
+    <div class="detail-top" style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <button class="back-btn" onclick="closeDetail()"><i class="iconoir-nav-arrow-left"></i></button>
+      <div><b style="font-size:14px" id="detailTemple">amaNazaretha Church</b><div style="font-size:11px;color:var(--muted)" id="detailTime"></div></div>
+      <button class="menu-btn" id="detailMenuBtn" style="margin-left:auto" onclick="openPostMenu(openDetailId)" aria-label="Post options"><i class="iconoir-menu"></i></button>
+    </div>
+    <div class="detail-media" id="detailMedia"></div>
+    <div class="detail-body">
+      <h2 id="detailTitle"></h2>
+      <p id="detailText"></p>
+      <div class="detail-meta" id="detailTags"></div>
+      <div class="post-time" id="detailPostTime"></div>
+    </div>
+    <div class="detail-actions">
+      <div class="left-actions">
+        <button class="action" id="detailLike" onclick="toggleLike(document.getElementById('detailLike'))"><i class="iconoir-heart"></i><span>0</span></button>
+        <button class="action" id="detailComment" onclick="openPostComments(openDetailId)"><i class="iconoir-chat-bubble"></i><span>0</span></button>
+        <button class="action" id="detailRepost" onclick="toggleRepost(document.getElementById('detailRepost'))"><i class="iconoir-repeat"></i><span>0</span></button>
+        <button class="action" onclick="sharePostLink(openDetailId)"><i class="iconoir-share-android"></i></button>
+      </div>
+      <button class="action" id="detailSave" onclick="toggleSave(document.getElementById('detailSave'))"><i class="iconoir-bookmark"></i></button>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeAllSheets()"></div>
+
+  <div class="comments-sheet" id="commentsSheet">
+    <div class="comments-handle"></div>
+    <div class="comments-head">
+      <h3 id="commentsTitle">Comments</h3>
+      <button onclick="closeComments()"><i class="iconoir-xmark"></i></button>
+    </div>
+    <div class="comments-list" id="commentsList"></div>
+    <div class="comments-input-row">
+      <input id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')postComment()">
+      <button onclick="postComment()"><i class="iconoir-send"></i></button>
+    </div>
+  </div>
+
+  <div class="overlay" id="menuOverlay">
+    <div class="sheet">
+      <button class="menu-item" id="menuEditBtn" style="display:none" onclick="closeMenu();openEditPost(activeMenuPostId)"><i class="iconoir-edit-pencil"></i>Edit post</button>
+      <button class="menu-item danger" id="menuDeleteBtn" style="display:none" onclick="closeMenu();deletePost(activeMenuPostId)"><i class="iconoir-trash"></i>Delete post</button>
+      <button class="menu-item" onclick="menuAction('Why you are seeing this post')"><i class="iconoir-info-circle"></i>Why you're seeing this post</button>
+      <button class="menu-item" onclick="menuAction('Marked as interested')"><i class="iconoir-thumbs-up"></i>Interested</button>
+      <button class="menu-item" onclick="menuAction('You will see fewer posts like this')"><i class="iconoir-thumbs-down"></i>Not interested</button>
+      <button class="menu-item danger" onclick="menuAction('Report submitted')"><i class="iconoir-flag"></i>Report</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+  <script>
+    let openDetailId = null;
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      openDetailId = params.get('id');
+      if (openDetailId) { openPostDetail(openDetailId); }
+    });
+
+    function closeDetail() { window.history.back(); }
+    function openPostComments(postId) { document.getElementById('commentsSheet').classList.add('open'); document.getElementById('sheetBackdrop').classList.add('open'); }
+    function closeComments() { document.getElementById('commentsSheet').classList.remove('open'); document.getElementById('sheetBackdrop').classList.remove('open'); }
+    function postComment() { showToast('Comment posted'); closeComments(); }
+    function openPostMenu(postId) { document.getElementById('menuOverlay').classList.add('open'); document.getElementById('sheetBackdrop').classList.add('open'); activeMenuPostId = postId; }
+    function closeMenu() { document.getElementById('menuOverlay').classList.remove('open'); document.getElementById('sheetBackdrop').classList.remove('open'); }
+    function menuAction(msg) { showToast(msg); closeMenu(); }
+    function toggleLike(btn) { btn.classList.toggle('active'); const span = btn.querySelector('span'); span.textContent = parseInt(span.textContent) + (btn.classList.has('active') ? 1 : -1); }
+    function toggleRepost(btn) { btn.classList.toggle('active'); const span = btn.querySelector('span'); span.textContent = parseInt(span.textContent) + (btn.classList.has('active') ? 1 : -1); }
+    function toggleSave(btn) { btn.classList.toggle('active'); showToast(btn.classList.has('active') ? 'Saved' : 'Unsaved'); }
+    function sharePostLink(postId) { showToast('Link copied'); }
+    function closeAllSheets() { closeComments(); closeMenu(); }
+    window.closeDetail = closeDetail; window.openPostComments = openPostComments; window.closeComments = closeComments; window.postComment = postComment; window.openPostMenu = openPostMenu; window.closeMenu = closeMenu; window.menuAction = menuAction; window.toggleLike = toggleLike; window.toggleRepost = toggleRepost; window.toggleSave = toggleSave; window.sharePostLink = sharePostLink; window.closeAllSheets = closeAllSheets;
+  </script>
+</body>
+</html>

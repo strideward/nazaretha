@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Nazaretha · Welcome</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .camera-screen {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      max-width: 430px;
+      margin: 0 auto;
+      display: none;
+    }
+    .camera-screen.open { display: flex; }
+    .cam-view { flex: 1; position: relative; overflow: hidden; background: #000; }
+    .cam-view video, .cam-view .cam-fallback { width: 100%; height: 100%; object-fit: cover; }
+    .cam-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; gap: 8px; }
+    .cam-fallback i { font-size: 48px; opacity: 0.5; }
+    .cam-top { position: absolute; top: 0; left: 0; right: 0; padding: env(safe-area-inset-top, 12px) 16px 12px; display: flex; align-items: center; justify-content: space-between; z-index: 10; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.5), transparent); }
+    .cam-top > * { pointer-events: auto; }
+    .cam-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; backdrop-filter: blur(8px); transition: background 0.2s; }
+    .cam-btn:active { background: rgba(0,0,0,0.6); }
+    .cam-mode-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.4); border-radius: 24px; padding: 4px; backdrop-filter: blur(8px); }
+    .cam-mode-tab { padding: 6px 16px; border-radius: 20px; border: none; background: transparent; color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .cam-mode-tab.active { background: #fff; color: #000; }
+    .cam-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 16px); display: flex; justify-content: center; z-index: 10; }
+    .cam-controls { display: flex; align-items: center; gap: 24px; width: 100%; max-width: 400px; justify-content: space-between; }
+    .cam-record { width: 76px; height: 76px; border-radius: 50%; border: 4px solid #fff; background: transparent; position: relative; flex-shrink: 0; }
+    .cam-record span { display: block; width: 56px; height: 56px; border-radius: 50%; background: #ff3b30; margin: 4px auto; transition: transform 0.1s, border-radius 0.2s; }
+    .cam-record.recording span { width: 32px; height: 32px; border-radius: 8px; }
+    .cam-record:active span { transform: scale(0.95); }
+    .cam-flip { width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.4); border: none; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; backdrop-filter: blur(8px); flex-shrink: 0; }
+    .media-preview { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: #1a1a1a; position: relative; flex-shrink: 0; cursor: pointer; }
+    .media-preview video, .media-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666; font-size: 24px; }
+    @media (max-width: 380px) { .cam-controls { gap: 16px; } .cam-record { width: 68px; height: 68px; } .cam-record span { width: 48px; height: 48px; } .cam-flip { width: 48px; height: 48px; } .media-preview { width: 48px; height: 48px; } .cam-mode-tab { padding: 6px 12px; font-size: 12px; } }
+  </style>
+</head>
+<body class="auth-pending">
+  <div class="phone">
+    <div class="auth-flow" id="authFlow" aria-hidden="false">
+      <section class="auth-screen active" data-auth="welcome">
+        <div class="auth-top">
+          <span></span>
+          <button class="auth-close" id="authClose" onclick="closeAuth()" aria-label="Close" hidden><i class="iconoir-xmark"></i></button>
+        </div>
+        <div class="auth-scroll auth-welcome">
+          <ul class="orbit-wrap">
+            <li class="radar-grid radar-ring-1"></li>
+            <li class="radar-grid radar-ring-2"></li>
+            <li class="radar-grid radar-ring-3"></li>
+            <li class="orbit-center" title="amaNazaretha">
+              <div class="orbit-center__icon"><i class="iconoir-church-side"></i></div>
+            </li>
+            <li>
+              <ul class="ring-avatars">
+                <li><div class="radar-avatar" style="background:#1e3a5f" title="Thabo Ndlovu"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=140&q=80" alt="TN" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="avatar-fallback" style="display:none">TN</span></div></li>
+                <li><div class="radar-avatar" style="background:#7b2cbf" title="Zodwa Mthembu"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=140&q=80" alt="ZM" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="avatar-fallback" style="display:none">ZM</span></div></li>
+                <li><div class="radar-avatar" style="background:#0e6b47" title="Sipho Khumalo"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=140&q=80" alt="SK" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="avatar-fallback" style="display:none">SK</span></div></li>
+                <li><div class="radar-avatar" style="background:#b85d19" title="Nomsa Shembe"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=140&q=80" alt="NS" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="avatar-fallback" style="display:none">NS</span></div></li>
+                <li><div class="radar-avatar" style="background:#8c1d40" title="Bongani Majola"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=140&q=80" alt="BM" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="avatar-fallback" style="display:none">BM</span></div></li>
+              </ul>
+            </li>
+          </ul>
+          <h1 class="auth-wordmark">Shembe is the way</h1>
+          <div class="auth-actions">
+            <button class="auth-primary" onclick="showAuth('register')">Get Started</button>
+            <button class="auth-link" onclick="showAuth('login')">Find my account</button>
+          </div>
+          <p class="auth-legal">By continuing you agree to our Terms of Service and Privacy Policy.</p>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="login">
+        <div class="auth-top">
+          <button class="auth-back" onclick="showAuth('welcome')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button>
+          <span></span>
+        </div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Welcome back</h1><p>Sign in to continue.</p></div>
+          <form onsubmit="submitLogin(event)">
+            <div class="reg-field"><label for="loginId">Email or phone</label><input id="loginId" type="text" autocomplete="username" placeholder="Enter your email or phone"></div>
+            <div class="reg-field"><label for="loginPassword">Password</label><div class="auth-pass"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your password"><button type="button" class="auth-eye" onclick="togglePassword('loginPassword', this)" aria-label="Show password"><i class="iconoir-eye"></i></button></div></div>
+            <button type="button" class="auth-forgot" onclick="showAuth('forgot')">Forgot password?</button>
+            <button type="submit" class="reg-submit">Sign in</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="register">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('welcome')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>What's your name?</h1><p>Enter your full name.</p></div>
+          <form onsubmit="nextRegStep(1, event)">
+            <div class="reg-row">
+              <div class="reg-field"><label for="regFirst">First name</label><input id="regFirst" type="text" placeholder="e.g. Sibusiso" autocomplete="given-name"></div>
+              <div class="reg-field"><label for="regSurname">Surname</label><input id="regSurname" type="text" placeholder="e.g. Dlamini" autocomplete="family-name"></div>
+            </div>
+            <button class="reg-submit" type="submit">Next</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-dob">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('register')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Date of birth</h1><p>Select your birth date.</p></div>
+          <form onsubmit="nextRegStep(2, event)"><div class="reg-field"><label for="regDob">Date of birth</label><input id="regDob" type="date"></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-gender">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-dob')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Select gender</h1><p>Choose your gender.</p></div>
+          <form onsubmit="nextRegStep(3, event)">
+            <div class="reg-field"><label>Gender</label><div class="reg-gender" id="regGender"><button type="button" data-g="male" onclick="selectRegGender('male')">Male</button><button type="button" data-g="female" onclick="selectRegGender('female')">Female</button></div></div>
+            <button class="reg-submit" type="submit">Next</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-praise">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-gender')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1 id="regPraiseTitle">Choose praise name</h1><p id="regPraiseSub">Select one option.</p></div>
+          <form onsubmit="nextRegStep(4, event)"><div class="reg-field reg-praise show" id="regPraiseWrap"><label id="regPraiseLabel">Praise name</label><div class="reg-praise-opts" id="regPraiseOpts"></div></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-temple">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-praise')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Your temple</h1><p>Select your temple.</p></div>
+          <form onsubmit="nextRegStep(5, event)"><div class="reg-field"><label for="regTemple">Temple</label><select id="regTemple"><option value="">Select temple…</option><option value="eBuhleni">eBuhleni</option><option value="eKuphakameni">eKuphakameni</option><option value="Bhekabezayo">Bhekabezayo</option></select></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-preacher">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-temple')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Your preacher</h1><p>Select your preacher.</p></div>
+          <form onsubmit="nextRegStep(6, event)"><div class="reg-field"><label for="regPreacher">Preacher</label><select id="regPreacher"><option value="">Select preacher…</option><option value="Zwane">Zwane</option><option value="Mpanza">Mpanza</option><option value="Majiya">Majiya</option></select></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-email">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-preacher')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Your email</h1><p>Enter your email address.</p></div>
+          <form onsubmit="nextRegStep(7, event)"><div class="reg-field"><label for="regEmail">Email</label><input id="regEmail" type="email" placeholder="Enter your email" autocomplete="email"></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-password">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-email')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Create password</h1><p>Choose a secure password.</p></div>
+          <form onsubmit="nextRegStep(8, event)"><div class="reg-field"><label for="regPassword">Password</label><div class="auth-pass"><input id="regPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password"><button type="button" class="auth-eye" onclick="togglePassword('regPassword', this)" aria-label="Show password"><i class="iconoir-eye"></i></button></div></div><button class="reg-submit" type="submit">Next</button></form>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="reg-avatar">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('reg-password')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Profile picture</h1><p>Upload a profile photo.</p></div>
+          <div class="reg-photo-preview-wrap">
+            <input type="file" id="regAvatarInput" accept="image/*" style="display:none" onchange="handleRegPhotoUpload('avatar', this)">
+            <div class="reg-avatar-preview" id="regAvatarBox" onclick="document.getElementById('regAvatarInput').click()" title="Click to upload"><i class="iconoir-camera" id="regAvatarIcon"></i><img id="regAvatarImg" style="display:none" alt="Profile Preview"></div>
+            <button type="button" class="auth-link" style="height:38px;padding:0 20px" onclick="document.getElementById('regAvatarInput').click()">Choose photo</button>
+          </div>
+          <div class="reg-upload-btn-row"><button class="reg-submit" type="button" onclick="submitRegister()">Done</button></div>
+        </div>
+      </section>
+
+      <section class="auth-screen" data-auth="forgot">
+        <div class="auth-top"><button class="auth-back" onclick="showAuth('login')" aria-label="Back"><i class="iconoir-nav-arrow-left"></i></button><span></span></div>
+        <div class="auth-scroll">
+          <div class="auth-head"><h1>Reset password</h1><p>Enter the email or phone linked to your account and we'll send a reset link.</p></div>
+          <form id="forgotForm" onsubmit="submitForgot(event)"><div class="reg-field"><label for="forgotId">Email or phone</label><input id="forgotId" type="text" autocomplete="username" placeholder="Enter your email or phone"></div><button class="reg-submit" type="submit">Send reset link</button></form>
+          <div class="auth-success" id="forgotSuccess" hidden><span class="auth-success-icon"><i class="iconoir-mail-opened"></i></span><b>Check your inbox</b><p>Reset link sent if the account exists.</p><button class="auth-primary" onclick="showAuth('login')">Back to sign in</button></div>
+          <p class="auth-switch" id="forgotSwitch"><button type="button" onclick="showAuth('login')">Back to sign in</button></p>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="app.js"></script>
+  <script>
+    // Camera functions (shared)
+    let currentCaptureMode = 'video';
+    let isRecording = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let currentStream = null;
+    let facingMode = 'environment';
+    let flashEnabled = false;
+
+    function openCreatePanel() { document.getElementById('createPanel').classList.add('open'); document.body.style.overflow = 'hidden'; startCamera(); loadLastMedia(); }
+    function closeCreatePanel() { stopCamera(); document.getElementById('createPanel').classList.remove('open'); document.body.style.overflow = ''; resetCaptureUI(); }
+    async function startCamera() { const video = document.getElementById('camVideo'); const fallback = document.getElementById('camFallback'); try { currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: currentCaptureMode === 'video' }); video.srcObject = currentStream; video.classList.remove('hidden'); fallback.classList.add('hidden'); } catch (err) { console.error('Camera error:', err); video.classList.add('hidden'); fallback.classList.remove('hidden'); } }
+    function stopCamera() { if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); currentStream = null; } if (mediaRecorder && mediaRecorder.state !== 'inactive') { mediaRecorder.stop(); } document.getElementById('camVideo').classList.add('hidden'); document.getElementById('camFallback').classList.remove('hidden'); }
+    function flipCamera() { facingMode = facingMode === 'environment' ? 'user' : 'environment'; stopCamera(); startCamera(); }
+    function toggleFlash() { flashEnabled = !flashEnabled; const btn = document.getElementById('flashBtn'); btn.innerHTML = flashEnabled ? '<i class="iconoir-flash"></i>' : '<i class="iconoir-flash-off"></i>'; btn.style.background = flashEnabled ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.4)'; btn.style.color = flashEnabled ? '#000' : '#fff'; if (currentStream) { const track = currentStream.getVideoTracks()[0]; if (track && track.getCapabilities().torch) { track.applyConstraints({ advanced: [{ torch: flashEnabled }] }).catch(console.error); } } }
+    function setCaptureMode(mode) { currentCaptureMode = mode; document.querySelectorAll('.cam-mode-tab').forEach(tab => { tab.classList.toggle('active', tab.dataset.mode === mode); tab.setAttribute('aria-selected', tab.dataset.mode === mode); }); if (currentStream) { stopCamera(); startCamera(); } const recordBtn = document.getElementById('camRecord'); recordBtn.classList.toggle('photo-mode', mode === 'photo'); }
+    function camPressStart() { if (currentCaptureMode !== 'video') return; isRecording = true; recordedChunks = []; const videoTrack = currentStream.getVideoTracks()[0]; const audioTrack = currentStream.getAudioTracks()[0]; const stream = new MediaStream([videoTrack, audioTrack].filter(Boolean)); mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' }); mediaRecorder.ondataavailable = e => { if (e.data.size) recordedChunks.push(e.data); }; mediaRecorder.onstop = saveRecording; mediaRecorder.start(100); document.getElementById('camRecord').classList.add('recording'); }
+    function camPressEnd() { if (!isRecording) return; isRecording = false; if (mediaRecorder && mediaRecorder.state === 'recording') { mediaRecorder.stop(); } document.getElementById('camRecord').classList.remove('recording'); }
+    function camTap() { if (currentCaptureMode === 'video') return; if (currentCaptureMode === 'photo') { capturePhoto(); } else if (currentCaptureMode === 'text') { closeCreatePanel(); setTimeout(() => { window.location.href = 'post-composer.html'; }, 100); } }
+    function capturePhoto() { const video = document.getElementById('camVideo'); const canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight; const ctx = canvas.getContext('2d'); ctx.drawImage(video, 0, 0); canvas.toBlob(blob => { const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' }); handleCapturedFile(file); }, 'image/jpeg', 0.9); }
+    function saveRecording() { const blob = new Blob(recordedChunks, { type: 'video/webm' }); const file = new File([blob], `video_${Date.now()}.webm`, { type: 'video/webm' }); handleCapturedFile(file); }
+    function handleCapturedFile(file) { const url = URL.createObjectURL(file); const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); if (file.type.startsWith('video/')) { previewVideo.src = url; previewVideo.classList.remove('hidden'); previewImg.classList.add('hidden'); } else { previewImg.src = url; previewImg.classList.remove('hidden'); previewVideo.classList.add('hidden'); } placeholder.classList.add('hidden'); window.lastCapturedFile = file; window.lastCapturedUrl = url; }
+    function resetCaptureUI() { document.getElementById('camRecord').classList.remove('recording', 'photo-mode'); isRecording = false; }
+    function openMediaPicker() { document.getElementById('galleryFile').click(); }
+    function loadGalleryFile(input) { const file = input.files[0]; if (!file) return; const url = URL.createObjectURL(file); const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); if (file.type.startsWith('video/')) { previewVideo.src = url; previewVideo.classList.remove('hidden'); previewImg.classList.add('hidden'); } else { previewImg.src = url; previewImg.classList.remove('hidden'); previewVideo.classList.add('hidden'); } placeholder.classList.add('hidden'); window.lastCapturedFile = file; window.lastCapturedUrl = url; input.value = ''; }
+    function loadCamFile(input) { const file = input.files[0]; if (!file) return; handleCapturedFile(file); input.value = ''; }
+    async function loadLastMedia() { const previewVideo = document.getElementById('previewVideo'); const previewImg = document.getElementById('previewImg'); const placeholder = document.getElementById('previewPlaceholder'); placeholder.classList.remove('hidden'); previewVideo.classList.add('hidden'); previewImg.classList.add('hidden'); }
+    window.openCreatePanel = openCreatePanel; window.closeCreatePanel = closeCreatePanel; window.flipCamera = flipCamera; window.toggleFlash = toggleFlash; window.setCaptureMode = setCaptureMode; window.camPressStart = camPressStart; window.camPressEnd = camPressEnd; window.camTap = camTap; window.openMediaPicker = openMediaPicker; window.loadCamFile = loadCamFile; window.loadGalleryFile = loadGalleryFile; window.loadLastMedia = loadLastMedia;
+  </script>
+  <div class="toast" id="toast"></div>
+</body>
+</html>
